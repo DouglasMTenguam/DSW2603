@@ -51,15 +51,11 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
-<<<<<<< HEAD
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
-
-=======
->>>>>>> ebc36776586299beeae08b8d1efb3538343febb6
     </dependencies>
 
     <build>
