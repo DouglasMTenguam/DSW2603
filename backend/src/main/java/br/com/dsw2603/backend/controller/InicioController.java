@@ -10,3 +10,5 @@ public class InicioController {
     public String inicio() {
         return "Backend DSW2603 funcionando!";
     }
+
+}

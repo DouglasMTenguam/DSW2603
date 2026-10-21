@@ -1,0 +1,8 @@
+br\com\dsw2603\backend\model\Categoria.class
+br\com\dsw2603\backend\repository\CategoriaRepository.class
+br\com\dsw2603\backend\service\CategoriaService.class
+br\com\dsw2603\backend\controller\CategoriaController.class
+br\com\dsw2603\backend\controller\InicioController.class
+br\com\dsw2603\backend\model\Produto.class
+br\com\dsw2603\backend\BackendApplication.class
+br\com\dsw2603\backend\repository\ProdutoRepository.class

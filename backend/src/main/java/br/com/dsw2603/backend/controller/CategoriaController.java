@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.dsw2603.backend.model.Categoria;
+import br.com.dsw2603.backend.model.entity.Categoria;
 import br.com.dsw2603.backend.service.CategoriaService;
-import jakarta.validation.Valid;
+import br.com.dsw2603.backend.util.SomenteAdmin;
 
 @RestController 
-@RequestMapping("/categorias")
+@RequestMapping ("/categorias")
 public class CategoriaController {
 
     private final CategoriaService categoriaService;
@@ -29,28 +29,37 @@ public class CategoriaController {
 
     @GetMapping 
     public List<Categoria> listarCategorias() {
-        return categoriaService.listarCategorias();
+        return categoriaService.listar();
     }
 
     @GetMapping("/{id}")
     public Categoria buscarCategoriaPorId(@PathVariable Integer id) {
-        return categoriaService.buscarCategoriaPorId(id);
+        return categoriaService.buscar(id);
     }
 
+    @SomenteAdmin
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Categoria criarCategoria(@Valid @RequestBody Categoria categoria) {
-        return categoriaService.criarCategoria(categoria);
+    public Categoria criarCategoria(@RequestBody Categoria categoria) {
+        return categoriaService.criar(categoria);
     }
 
+    @SomenteAdmin
     @PutMapping("/{id}")
-    public Categoria atualizarCategoria(@PathVariable Integer id, @Valid @RequestBody Categoria categoriaAtualizada) {
-        return categoriaService.atualizarCategoria(id, categoriaAtualizada);
+    public Categoria atualizarCategoria(@PathVariable Integer id, @RequestBody Categoria categoriaAtualizada) {
+        return categoriaService.atualizar(id, categoriaAtualizada);
     }
 
+    @SomenteAdmin
     @PatchMapping("/{id}/desativar")
     public Categoria desativarCategoria(@PathVariable Integer id) {
-        return categoriaService.desativarCategoria(id);
+        return categoriaService.desativar(id);
     }
-    
+
+    @SomenteAdmin
+    @PatchMapping("/{id}/ativar")
+    public Categoria ativarCategoria(@PathVariable Integer id) {
+        return categoriaService.ativar(id);
+    }
+
 }
