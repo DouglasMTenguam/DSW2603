@@ -19,6 +19,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Usuario {
 
+    // Integer (e não Long) porque a coluna id_usuario do script SQL é INT
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")
@@ -27,65 +28,20 @@ public class Usuario {
     @Column(nullable = false, length = 100)
     private String nome;
 
+    // único (RN17)
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
+    // o JSON recebe "senha", o banco guarda o hash MD5 em senha_hash e ela nunca volta na resposta (RN17)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "senha_hash", nullable = false, length = 255)
     private String senha;
 
+    // ADMINISTRADOR ou OPERADOR
     @Column(nullable = false, length = 20)
     private String perfil;
 
+    // usuário inativo não consegue entrar (RN17)
     @Column(nullable = false)
     private Boolean ativo = true;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha) {
-        this.senha = senha;
-    }
-
-    public String getPerfil() {
-        return perfil;
-    }
-
-    public void setPerfil(String perfil) {
-        this.perfil = perfil;
-    }
-
-    public Boolean getAtivo() {
-        return ativo;
-    }
-
-    public void setAtivo(Boolean ativo) {
-        this.ativo = ativo;
-    }
-
 }

@@ -21,19 +21,18 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/usuarios")
+@RequiredArgsConstructor
 public class UsuarioController {
 
     private final UsuarioService service;
 
-    public UsuarioController(UsuarioService service) {
-        this.service = service;
-    }
-
+    // qualquer usuário logado vê os próprios dados
     @GetMapping("/me")
     public Usuario buscarLogado(@RequestAttribute Integer usuarioId) {
         return service.buscar(usuarioId);
     }
 
+    // daqui para baixo: só o administrador (RN16)
     @SomenteAdmin
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

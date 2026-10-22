@@ -13,15 +13,16 @@ import br.com.dsw2603.backend.model.entity.Produto;
 import br.com.dsw2603.backend.repository.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
 
-@Service 
+@Service
 @RequiredArgsConstructor
 public class ProdutoService {
 
     private static final Set<String> UNIDADES = Set.of("kg", "unidade", "maço", "caixa");
 
     private final ProdutoRepository repository;
-    private final CategoriaService service;
+    private final CategoriaService categoriaService;
 
+    // RN01, RN03, RN04 - devolve a categoria já carregada do banco
     private Categoria validar(Produto p) {
         if (p.getNome() == null || p.getNome().isBlank() || p.getUnidadeMedida() == null
                 || p.getCategoria() == null || p.getCategoria().getId() == null)
@@ -35,7 +36,7 @@ public class ProdutoService {
                     "Estoque mínimo deve ser igual ou maior que zero");
         if (p.getCustoReferencia() == null || p.getCustoReferencia().compareTo(BigDecimal.ZERO) < 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Custo de referência não pode ser negativo");
-        Categoria categoria = service.buscar(p.getCategoria().getId());
+        Categoria categoria = categoriaService.buscar(p.getCategoria().getId());
         if (!Boolean.TRUE.equals(categoria.getAtivo()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A categoria precisa estar ativa");
         return categoria;
@@ -43,6 +44,7 @@ public class ProdutoService {
 
     public Produto criar(Produto produto) {
         Categoria categoria = validar(produto);
+        // RN02 - estoque inicial não pode ser negativo
         BigDecimal estoque = produto.getEstoqueAtual() == null ? BigDecimal.ZERO : produto.getEstoqueAtual();
         if (estoque.compareTo(BigDecimal.ZERO) < 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O estoque inicial não pode ser negativo");
@@ -53,6 +55,7 @@ public class ProdutoService {
         return repository.save(produto);
     }
 
+    // ?nome=tom&categoriaId=1 (os dois são opcionais)
     public List<Produto> listar(String nome, Integer categoriaId) {
         String texto = (nome == null) ? "" : nome.trim();
         if (categoriaId == null)
@@ -65,6 +68,7 @@ public class ProdutoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
     }
 
+    // o estoque atual NÃO muda aqui: ele só muda por movimentação (entrada, saída, perda, ajuste)
     public Produto atualizar(Integer id, Produto dados) {
         Categoria categoria = validar(dados);
         Produto produto = buscar(id);
@@ -76,6 +80,7 @@ public class ProdutoService {
         return repository.save(produto);
     }
 
+    // RN05 - produto não é apagado, é desativado
     public Produto desativar(Integer id) {
         Produto produto = buscar(id);
         produto.setAtivo(false);

@@ -15,5 +15,4 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     boolean existsByEmailAndIdNot(String email, Integer id);
 
     long countByPerfilAndAtivoTrue(String perfil);
-    
 }

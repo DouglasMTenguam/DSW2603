@@ -17,29 +17,31 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.dsw2603.backend.model.entity.Produto;
 import br.com.dsw2603.backend.service.ProdutoService;
 import br.com.dsw2603.backend.util.SomenteAdmin;
+import lombok.RequiredArgsConstructor;
 
-@RestController 
-@RequestMapping ("/produtos")
+@RestController
+@RequestMapping("/api/produtos")
+@RequiredArgsConstructor
 public class ProdutoController {
 
     private final ProdutoService service;
 
-    public ProdutoController(ProdutoService service) {
-        this.service = service;
-    }
-
-    @GetMapping 
-    public List<Produto> listar(@RequestParam (required = false) String nome, @RequestParam(required = false) Integer categoriaId) {
+    // consultas: qualquer usuário logado (compras e perdas precisam escolher o produto)
+    // ?nome=tom&categoriaId=1 (os dois são opcionais)
+    @GetMapping
+    public List<Produto> listar(@RequestParam(required = false) String nome,
+                                @RequestParam(required = false) Integer categoriaId) {
         return service.listar(nome, categoriaId);
     }
 
-    @GetMapping ("/{id}")
+    @GetMapping("/{id}")
     public Produto buscar(@PathVariable Integer id) {
         return service.buscar(id);
     }
 
+    // alterações: só o administrador (RN16)
     @SomenteAdmin
-    @PostMapping 
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Produto criar(@RequestBody Produto produto) {
         return service.criar(produto);
@@ -62,5 +64,4 @@ public class ProdutoController {
     public Produto ativar(@PathVariable Integer id) {
         return service.ativar(id);
     }
-
 }

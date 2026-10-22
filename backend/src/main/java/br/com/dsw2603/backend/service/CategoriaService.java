@@ -10,19 +10,19 @@ import br.com.dsw2603.backend.model.entity.Categoria;
 import br.com.dsw2603.backend.repository.CategoriaRepository;
 import lombok.RequiredArgsConstructor;
 
-@Service 
+@Service
 @RequiredArgsConstructor
 public class CategoriaService {
 
     private final CategoriaRepository repository;
 
-    private void validar(Categoria c, Integer idAtual){
+    private void validar(Categoria c, Integer idAtual) {
         if (c.getNome() == null || c.getNome().isBlank())
-            throw new RuntimeException("Nome da categoria é obrigatório");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome é obrigatório");
         String nome = c.getNome().trim();
-        boolean repetida = (idAtual == null) 
-        ? repository.existsByNomeIgnoreCase(nome) 
-        : repository.existsByNomeIgnoreCaseAndIdNot(nome, idAtual);
+        boolean repetida = (idAtual == null)
+                ? repository.existsByNomeIgnoreCase(nome)
+                : repository.existsByNomeIgnoreCaseAndIdNot(nome, idAtual);
         if (repetida)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe uma categoria com esse nome");
     }
@@ -39,8 +39,9 @@ public class CategoriaService {
         return repository.findAll();
     }
 
-    public Categoria buscar(Integer id){
-        return repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada"));
+    public Categoria buscar(Integer id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada"));
     }
 
     public Categoria atualizar(Integer id, Categoria dados) {
@@ -50,16 +51,15 @@ public class CategoriaService {
         return repository.save(categoria);
     }
 
-    public Categoria desativar(Integer id){
+    public Categoria desativar(Integer id) {
         Categoria categoria = buscar(id);
         categoria.setAtivo(false);
         return repository.save(categoria);
     }
 
-    public Categoria ativar(Integer id){
+    public Categoria ativar(Integer id) {
         Categoria categoria = buscar(id);
         categoria.setAtivo(true);
         return repository.save(categoria);
     }
-
 }
