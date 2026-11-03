@@ -13,6 +13,6 @@ RUN ./mvnw -q package -DskipTests
 # ---------- etapa 2: imagem final, só com o JRE ----------
 FROM eclipse-temurin:21-jre
 WORKDIR /dsw2603_db
-COPY --from=build /app/target/*.jar dsw2603_db.jar
+COPY --from=build /dsw2603_db/target/*.jar dsw2603_db.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "dsw2603_db.jar"]
