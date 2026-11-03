@@ -1,6 +1,6 @@
 # ---------- etapa 1: compila o projeto ----------
 FROM eclipse-temurin:21-jdk AS build
-WORKDIR /app
+WORKDIR /dsw2603_db
 
 # baixa as dependências primeiro (fica em cache se o pom.xml não mudar)
 COPY mvnw pom.xml ./
@@ -12,7 +12,7 @@ RUN ./mvnw -q package -DskipTests
 
 # ---------- etapa 2: imagem final, só com o JRE ----------
 FROM eclipse-temurin:21-jre
-WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+WORKDIR /dsw2603_db
+COPY --from=build /app/target/*.jar dsw2603_db.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "dsw2603_db.jar"]
