@@ -31,6 +31,7 @@ services:
       mysql:
         condition: service_healthy
 
+<<<<<<< HEAD
   # frontend:
   #   build: ../frontend
   #   restart: unless-stopped
@@ -38,6 +39,15 @@ services:
   #     - "${FRONTEND_PORT}:80"
   #   depends_on:
   #     - backend
+=======
+  frontend:
+    build: ../frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT}:80"
+    depends_on:
+      - backend
+>>>>>>> b36e75e9c3f5783942167cc0d157db421f74a23c
 
 volumes:
   mysql-dados:

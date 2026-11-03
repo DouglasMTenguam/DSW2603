@@ -1,0 +1,12 @@
+# Ajustes só para rodar local (não vai para o git).
+
+
+services:
+  mysql:
+    ports:
+      # acesso ao banco pelo Workbench/DBeaver (3307 para não conflitar com um MySQL local na 3306)
+      - "3307:3306"
+
+  backend:
+    environment:
+      SPRING_JPA_SHOW_SQL: "true"
