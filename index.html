@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DSW2603</title>
+  <style>
+    body { font-family: sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #f4f6f8; }
+    main { background: #fff; padding: 2rem 3rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.1); text-align: center; }
+    .ok { color: #1a7f37; } .erro { color: #c62828; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>DSW2603</h1>
+    <p>Frontend na rede! Backend na rede!</p>
+    <p id="status">Verificando backend...</p>
+  </main>
+  <script>
+    const el = document.getElementById('status');
+    fetch('/api/')
+      .then(r => { el.textContent = 'Backend respondeu (HTTP ' + r.status + ')'; el.className = 'ok'; })
+      .catch(() => { el.textContent = 'Backend indisponível'; el.className = 'erro'; });
+  </script>
+</body>
+</html>
