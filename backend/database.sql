@@ -122,8 +122,8 @@ CREATE TABLE movimento_estoque (
 ) ENGINE = InnoDB;
 
 -- Primeiro administrador do sistema (rode uma vez, depois do script das tabelas).
--- Login: admin@feiragestor.com   Senha: admin123   (troque a senha depois de entrar)
+-- Login: admin@gmail.com   Senha: doambela   (troque a senha depois de entrar)
 -- O MD5() do MySQL gera o mesmo hash que o Md5Util do projeto.
 USE dsw2603_db;
 INSERT INTO usuario (nome, email, senha_hash, perfil, ativo)
-VALUES ('Administrador', 'admin@gmail.com', MD5('admin123'), 'ADMINISTRADOR', TRUE);
+VALUES ('Administrador', 'admin@gmail.com', MD5('doambela'), 'ADMINISTRADOR', TRUE);
