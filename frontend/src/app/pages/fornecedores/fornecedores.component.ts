@@ -13,7 +13,6 @@ import { mensagemErro } from '../../core/util';
     <div class="pagina">
       <div class="pagina-head">
         <div><h1>Fornecedores</h1><p>Mantenha os dados de quem fornece cada mercadoria.</p></div>
-        @if (auth.admin()) { <button type="button" class="btn primario" (click)="novo()">Novo fornecedor</button> }
       </div>
 
       @if (erro()) { <div class="alerta erro" role="alert">{{ erro() }}</div> }

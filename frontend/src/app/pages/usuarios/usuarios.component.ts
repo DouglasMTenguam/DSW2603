@@ -13,7 +13,6 @@ import { mensagemErro } from '../../core/util';
       <div class="pagina-head">
         <div><h1>Usuários <span class="selo">Acesso restrito ao administrador</span></h1>
           <p>Cadastre feirantes e administradores que podem entrar no sistema.</p></div>
-        <button type="button" class="btn primario" (click)="novo()">Novo usuário</button>
       </div>
 
       @if (erro()) { <div class="alerta erro" role="alert">{{ erro() }}</div> }
