@@ -15,7 +15,7 @@ const POR_PAGINA = 10;
     <div class="pagina">
       <div class="pagina-head">
         <div><h1>Estoque e movimentações</h1><p>Histórico de entradas, saídas e ajustes por produto.</p></div>
-        <button type="button" class="btn primario" (click)="abrir()">+ Registrar movimentação</button>
+        <button type="button" class="btn primario" (click)="abrir()">+ Alterar movimentação</button>
       </div>
 
       @if (sucesso()) { <div class="alerta sucesso" role="status">{{ sucesso() }}</div> }
