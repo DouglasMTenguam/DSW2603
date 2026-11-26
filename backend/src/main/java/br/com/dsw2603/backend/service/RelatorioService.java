@@ -32,16 +32,18 @@ public class RelatorioService {
         return (inicio == null) ? LocalDate.now().withDayOfMonth(1) : inicio;
     }
 
+    // sem fim ou fim depois de hoje: usa hoje (o relatório nunca cobre o futuro,
+    // e quem pede o mês inteiro, como o dashboard, continua funcionando)
     private LocalDate fim(LocalDate fim) {
-        return (fim == null) ? LocalDate.now() : fim;
+        LocalDate hoje = LocalDate.now();
+        return (fim == null || fim.isAfter(hoje)) ? hoje : fim;
     }
 
-    // nenhuma data do período pode passar de hoje, e o início não pode vir depois do fim
+    // início no futuro é erro; início depois do fim também
     private void validarPeriodo(LocalDate de, LocalDate ate) {
-        LocalDate hoje = LocalDate.now();
-        if (de.isAfter(hoje) || ate.isAfter(hoje))
+        if (de.isAfter(LocalDate.now()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "As datas do relatório não podem ser maiores que a data atual");
+                 "A data inicial do relatório não pode ser maior que a data atual");
         if (de.isAfter(ate))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "A data inicial não pode ser maior que a data final");
