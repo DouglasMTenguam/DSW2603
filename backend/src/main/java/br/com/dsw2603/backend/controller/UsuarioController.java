@@ -52,16 +52,18 @@ public class UsuarioController {
         return service.buscar(id);
     }
 
+    // usuarioId = quem está logado (vem do token); id = quem está sendo editado
     @SomenteAdmin
     @PutMapping("/{id}")
-    public Usuario atualizar(@PathVariable Integer id, @RequestBody Usuario usuario) {
-        return service.atualizar(id, usuario);
+    public Usuario atualizar(@RequestAttribute Integer usuarioId, @PathVariable Integer id,
+            @RequestBody Usuario usuario) {
+        return service.atualizar(usuarioId, id, usuario);
     }
 
     @SomenteAdmin
     @PatchMapping("/{id}/desativar")
-    public Usuario desativar(@PathVariable Integer id) {
-        return service.desativar(id);
+    public Usuario desativar(@RequestAttribute Integer usuarioId, @PathVariable Integer id) {
+        return service.desativar(usuarioId, id);
     }
 
     @SomenteAdmin
@@ -70,3 +72,4 @@ public class UsuarioController {
         return service.ativar(id);
     }
 }
+

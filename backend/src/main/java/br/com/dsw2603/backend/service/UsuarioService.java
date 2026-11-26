@@ -47,6 +47,20 @@ public class UsuarioService {
                     "O sistema precisa de pelo menos um administrador ativo");
     }
 
+    // 1º administrador = administrador com o menor id
+    private boolean ehPrimeiroAdmin(Usuario u) {
+        return repository.findFirstByPerfilOrderByIdAsc(Constantes.ADMINISTRADOR)
+                .map(primeiro -> primeiro.getId().equals(u.getId()))
+                .orElse(false);
+    }
+
+    // só o próprio 1º administrador pode mexer no cadastro dele
+    private void protegerPrimeiroAdmin(Usuario alvo, Integer usuarioLogadoId) {
+        if (ehPrimeiroAdmin(alvo) && !alvo.getId().equals(usuarioLogadoId))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "O administrador principal não pode ser editado ou desativado por outro usuário");
+    }
+
     public Usuario criar(Usuario usuario) {
         validar(usuario, null, true);
         usuario.setId(null);
@@ -74,13 +88,19 @@ public class UsuarioService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
     }
 
-    public Usuario atualizar(Integer id, Usuario dados) {
+    public Usuario atualizar(Integer usuarioLogadoId, Integer id, Usuario dados) {
         validar(dados, id, false);
         Usuario usuario = buscar(id);
+        protegerPrimeiroAdmin(usuario, usuarioLogadoId);
         boolean deixaDeSerAdminAtivo = !Constantes.ADMINISTRADOR.equals(dados.getPerfil())
                 || Boolean.FALSE.equals(dados.getAtivo());
-        if (deixaDeSerAdminAtivo)
+        if (deixaDeSerAdminAtivo) {
+            // o 1º admin continua sempre admin e ativo (senão "o 1º" passaria a ser outro)
+            if (ehPrimeiroAdmin(usuario))
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "O administrador principal não pode deixar de ser administrador nem ser desativado");
             garantirOutroAdmin(usuario);
+        }
         usuario.setNome(dados.getNome());
         usuario.setEmail(dados.getEmail());
         usuario.setPerfil(dados.getPerfil());
@@ -92,8 +112,12 @@ public class UsuarioService {
         return repository.save(usuario);
     }
 
-    public Usuario desativar(Integer id) {
+    public Usuario desativar(Integer usuarioLogadoId, Integer id) {
         Usuario usuario = buscar(id);
+        protegerPrimeiroAdmin(usuario, usuarioLogadoId);
+        if (ehPrimeiroAdmin(usuario))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "O administrador principal não pode ser desativado");
         garantirOutroAdmin(usuario);
         usuario.setAtivo(false);
         return repository.save(usuario);

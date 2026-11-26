@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
-import { FormArray, FormControl, FormGroup, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormControl, FormGroup, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CompraService, FornecedorService, ProdutoService } from '../../core/api.services';
 import { Fornecedor, Produto } from '../../core/models';
@@ -11,6 +11,11 @@ type ItemGroup = FormGroup<{
   quantidade: FormControl<number | null>;
   custoUnitario: FormControl<number | null>;
 }>;
+
+/** A data não pode ser maior que hoje (datas ISO 'yyyy-MM-dd' comparam certo como texto). */
+function naoFutura(c: AbstractControl): ValidationErrors | null {
+  return c.value && c.value > hojeISO() ? { futura: true } : null;
+}
 
 @Component({
   selector: 'app-compras',
@@ -35,8 +40,10 @@ type ItemGroup = FormGroup<{
               </select>
               @if (inv('idFornecedor')) { <span class="erro-campo">Selecione o fornecedor.</span> }</div>
             <div class="campo"><label for="c-data">Data do recebimento</label>
-              <input id="c-data" type="date" formControlName="data" [attr.aria-invalid]="inv('data')" />
-              @if (inv('data')) { <span class="erro-campo">Informe a data.</span> }</div>
+              <input id="c-data" type="date" formControlName="data" [max]="hoje()" [attr.aria-invalid]="inv('data')" />
+              @if (inv('data')) {
+                <span class="erro-campo">{{ form.controls.data.hasError('futura') ? 'A data não pode ser maior que hoje.' : 'Informe a data.' }}</span>
+              }</div>
           </div>
         </div>
 
@@ -103,10 +110,12 @@ export class ComprasComponent implements OnInit {
 
   form = this.fb.group({
     idFornecedor: [null as number | null, Validators.required],
-    data: [hojeISO(), Validators.required],
+    data: [hojeISO(), [Validators.required, naoFutura]],
     itens: this.fb.array<ItemGroup>([]),
   });
   get itens() { return this.form.controls.itens as FormArray<ItemGroup>; }
+  /** Limite do calendário: calculado na hora, para não "congelar" se a tela ficar aberta virando o dia. */
+  hoje() { return hojeISO(); }
 
   constructor() { this.adicionar(); }
 

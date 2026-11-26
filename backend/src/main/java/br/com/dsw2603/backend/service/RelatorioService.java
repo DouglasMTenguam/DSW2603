@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import br.com.dsw2603.backend.model.entity.MovimentoEstoque;
 import br.com.dsw2603.backend.repository.CompraRepository;
@@ -34,6 +36,17 @@ public class RelatorioService {
         return (fim == null) ? LocalDate.now() : fim;
     }
 
+    // nenhuma data do período pode passar de hoje, e o início não pode vir depois do fim
+    private void validarPeriodo(LocalDate de, LocalDate ate) {
+        LocalDate hoje = LocalDate.now();
+        if (de.isAfter(hoje) || ate.isAfter(hoje))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "As datas do relatório não podem ser maiores que a data atual");
+        if (de.isAfter(ate))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A data inicial não pode ser maior que a data final");
+    }
+
     private List<MovimentoEstoque> movimentos(String tipo, LocalDate de, LocalDate ate) {
         return movimentoRepository.findByTipoAndDataHoraGreaterThanEqualAndDataHoraLessThan(
                 tipo, de.atStartOfDay(), ate.plusDays(1).atStartOfDay());
@@ -46,6 +59,7 @@ public class RelatorioService {
     public Map<String, Object> resumo(LocalDate inicio, LocalDate fim) {
         LocalDate de = inicio(inicio);
         LocalDate ate = fim(fim);
+        validarPeriodo(de, ate);
         List<MovimentoEstoque> perdas = movimentos(Constantes.PERDA, de, ate);
         // custo da perda = quantidade x custo de referência do produto
         BigDecimal custoPerdas = perdas.stream()
@@ -72,6 +86,7 @@ public class RelatorioService {
     public Map<String, Object> perdas(LocalDate inicio, LocalDate fim) {
         LocalDate de = inicio(inicio);
         LocalDate ate = fim(fim);
+        validarPeriodo(de, ate);
         Map<String, BigDecimal> porProduto = new LinkedHashMap<>();
         Map<String, BigDecimal> porTipo = new LinkedHashMap<>();
         for (MovimentoEstoque m : movimentos(Constantes.PERDA, de, ate)) {

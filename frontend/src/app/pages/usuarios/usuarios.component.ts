@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UsuarioService } from '../../core/api.services';
 import { Perfil, Usuario } from '../../core/models';
@@ -27,12 +27,16 @@ import { mensagemErro } from '../../core/util';
               <tbody>
                 @for (u of lista(); track u.id) {
                   <tr>
-                    <td><strong>{{ u.nome }}</strong></td><td>{{ u.email }}</td>
+                    <td><strong>{{ u.nome }}</strong> @if (ehPrimeiro(u)) { <span class="selo">Principal</span> }</td><td>{{ u.email }}</td>
                     <td>{{ u.perfil === 'ADMINISTRADOR' ? 'Administrador' : 'Feirante / operador' }}</td>
                     <td><span class="selo" [class.ok]="u.ativo">{{ u.ativo ? 'Ativo' : 'Inativo' }}</span></td>
                     <td><span class="acoes">
-                      <button type="button" class="btn pequeno" (click)="editar(u)" [attr.aria-label]="'Editar ' + u.nome">Editar</button>
-                      <button type="button" class="btn pequeno" (click)="alternar(u)" [attr.aria-label]="(u.ativo ? 'Desativar ' : 'Ativar ') + u.nome">{{ u.ativo ? 'Desativar' : 'Ativar' }}</button>
+                      <button type="button" class="btn pequeno" (click)="editar(u)" [disabled]="protegido(u)"
+                        [attr.title]="protegido(u) ? 'Só o próprio administrador principal pode editar este cadastro' : null"
+                        [attr.aria-label]="'Editar ' + u.nome">Editar</button>
+                      <button type="button" class="btn pequeno" (click)="alternar(u)" [disabled]="ehPrimeiro(u)"
+                        [attr.title]="ehPrimeiro(u) ? 'O administrador principal não pode ser desativado' : null"
+                        [attr.aria-label]="(u.ativo ? 'Desativar ' : 'Ativar ') + u.nome">{{ u.ativo ? 'Desativar' : 'Ativar' }}</button>
                     </span></td>
                   </tr>
                 } @empty { <tr><td colspan="5" class="vazio">Nenhum usuário cadastrado.</td></tr> }
@@ -62,7 +66,8 @@ import { mensagemErro } from '../../core/util';
             <div class="opcoes" role="radiogroup" aria-labelledby="u-sit">
               <label class="opcao"><input type="radio" formControlName="ativo" [value]="true" /> Ativo</label>
               <label class="opcao"><input type="radio" formControlName="ativo" [value]="false" /> Inativo</label>
-            </div></div>
+            </div>
+            @if (editandoPrimeiro()) { <span class="ajuda">Administrador principal: perfil e situação não podem ser alterados.</span> }</div>
           <div class="rodape-form">
             <button type="button" class="btn" (click)="novo()">Cancelar</button>
             <button type="submit" class="btn primario" [disabled]="salvando()">{{ salvando() ? 'Salvando…' : 'Salvar usuário' }}</button>
@@ -81,6 +86,19 @@ export class UsuariosComponent implements OnInit {
   salvando = signal(false);
   private tentou = false;
 
+  /** id de quem está logado (vem de GET /api/usuarios/me). */
+  meuId = signal<number | null>(null);
+  /** 1º administrador = administrador com o menor id (mesma regra do backend). */
+  primeiroAdminId = computed(() => {
+    const ids = this.lista().filter(u => u.perfil === 'ADMINISTRADOR').map(u => u.id);
+    return ids.length ? Math.min(...ids) : null;
+  });
+  editandoPrimeiro = computed(() => this.editandoId() !== null && this.editandoId() === this.primeiroAdminId());
+
+  ehPrimeiro(u: Usuario) { return u.id === this.primeiroAdminId(); }
+  /** Outro admin não pode editar o principal; só ele mesmo. */
+  protegido(u: Usuario) { return this.ehPrimeiro(u) && u.id !== this.meuId(); }
+
   form = inject(FormBuilder).nonNullable.group({
     nome: ['', [Validators.required, Validators.pattern(/\S/)]],
     email: ['', [Validators.required, Validators.email]],
@@ -89,7 +107,10 @@ export class UsuariosComponent implements OnInit {
     ativo: [true],
   });
 
-  ngOnInit() { this.carregar(); }
+  ngOnInit() {
+    this.carregar();
+    this.api.me().subscribe({ next: u => this.meuId.set(u.id), error: e => this.erro.set(mensagemErro(e)) });
+  }
   carregar() { this.api.listar().subscribe({ next: l => this.lista.set(l), error: e => this.erro.set(mensagemErro(e)) }); }
 
   inv(c: 'nome' | 'email' | 'senha') {
@@ -101,11 +122,18 @@ export class UsuariosComponent implements OnInit {
   novo() {
     this.editandoId.set(null); this.tentou = false; this.erro.set('');
     this.form.reset({ nome: '', email: '', senha: '', perfil: 'OPERADOR', ativo: true });
+    this.travarPerfilESituacao(false);
   }
   editar(u: Usuario) {
     this.sucesso.set(''); this.erro.set(''); this.tentou = false;
     this.editandoId.set(u.id);
     this.form.reset({ nome: u.nome, email: u.email, senha: '', perfil: u.perfil, ativo: u.ativo });
+    this.travarPerfilESituacao(this.ehPrimeiro(u));
+  }
+
+  // getRawValue() continua lendo os campos desabilitados, então o salvar não muda
+  private travarPerfilESituacao(travar: boolean) {
+    for (const c of [this.form.controls.perfil, this.form.controls.ativo]) { if (travar) c.disable(); else c.enable(); }
   }
 
   alternar(u: Usuario) {

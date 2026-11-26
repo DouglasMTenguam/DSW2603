@@ -25,8 +25,8 @@ type Linha = { nome: string; quantidade: number };
 
       <form class="card" [formGroup]="form" (ngSubmit)="gerar()">
         <div class="linha">
-          <div class="campo"><label for="r-de">Período — de</label><input id="r-de" type="date" formControlName="inicio" /></div>
-          <div class="campo"><label for="r-ate">Período — até</label><input id="r-ate" type="date" formControlName="fim" /></div>
+          <div class="campo"><label for="r-de">Período — de</label><input id="r-de" type="date" formControlName="inicio" [max]="form.controls.fim.value || hoje()" /></div>
+          <div class="campo"><label for="r-ate">Período — até</label><input id="r-ate" type="date" formControlName="fim" [min]="form.controls.inicio.value" [max]="hoje()" /></div>
           <div class="campo"><button type="submit" class="btn primario" [disabled]="carregando()">{{ carregando() ? 'Gerando…' : 'Gerar relatório' }}</button></div>
           <div class="campo"><button type="button" class="btn" (click)="exportar()" [disabled]="!vm()">Exportar CSV</button></div>
         </div>
@@ -110,6 +110,9 @@ export class RelatoriosComponent implements OnInit {
 
   ngOnInit() { this.gerar(); }
 
+  /** Limite do calendário: calculado na hora, para não "congelar" se a tela ficar aberta virando o dia. */
+  hoje() { return hojeISO(); }
+
   rotuloPerda(t: string) { return ROTULO_PERDA[t] ?? t; }
   rotuloTipo(t: string) { return ROTULO_TIPO[t as keyof typeof ROTULO_TIPO] ?? t; }
   qtd(m: Movimento) { return quantidadeComSinal(m); }
@@ -122,6 +125,7 @@ export class RelatoriosComponent implements OnInit {
 
   gerar() {
     const { inicio, fim } = this.form.getRawValue();
+    if ((inicio && inicio > this.hoje()) || (fim && fim > this.hoje())) { this.erro.set('As datas do relatório não podem ser maiores que hoje.'); return; }
     if (inicio && fim && inicio > fim) { this.erro.set('A data inicial não pode ser depois da data final.'); return; }
     this.erro.set(''); this.carregando.set(true);
     forkJoin({

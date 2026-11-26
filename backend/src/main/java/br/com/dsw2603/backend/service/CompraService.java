@@ -25,14 +25,14 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class CompraService {
-
+ 
     private final CompraRepository repository;
     private final ItemCompraRepository itemRepository;
     private final FornecedorService fornecedorService;
     private final ProdutoService produtoService;
     private final UsuarioService usuarioService;
     private final MovimentoEstoqueService movimentoService;
-
+ 
     // registra a compra como PENDENTE; o estoque só muda quando o recebimento é confirmado
     @Transactional
     public Compra criar(Integer usuarioId, CompraRequest req) {
@@ -41,10 +41,14 @@ public class CompraService {
                 || req.getItens() == null || req.getItens().isEmpty())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Fornecedor, data e pelo menos um item são obrigatórios");
+        // a data da compra não pode ser posterior a hoje
+        if (req.getDataCompra().isAfter(LocalDate.now()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A data da compra não pode ser maior que a data atual");
         Fornecedor fornecedor = fornecedorService.buscar(req.getIdFornecedor());
         if (!Boolean.TRUE.equals(fornecedor.getAtivo()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fornecedor inativo");
-
+ 
         List<ItemCompra> itens = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
         for (ItemCompraRequest ir : req.getItens()) {
@@ -58,7 +62,7 @@ public class CompraService {
             Produto produto = produtoService.buscar(ir.getIdProduto());
             if (!Boolean.TRUE.equals(produto.getAtivo()))
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produto inativo: " + produto.getNome());
-
+ 
             ItemCompra item = new ItemCompra();
             item.setProduto(produto);
             item.setQuantidade(ir.getQuantidade());
@@ -69,7 +73,7 @@ public class CompraService {
             total = total.add(subtotal);
             itens.add(item);
         }
-
+ 
         Compra compra = new Compra();
         compra.setDataCompra(req.getDataCompra());
         compra.setFornecedor(fornecedor);
@@ -82,13 +86,17 @@ public class CompraService {
         itemRepository.saveAll(itens);
         return compra;
     }
-
+ 
     // RN14 - confirma o recebimento: aumenta o estoque e registra as entradas, sem duplicar
     @Transactional
     public Compra receber(Integer usuarioId, Integer id) {
         Compra compra = buscar(id);
         if (Constantes.RECEBIDA.equals(compra.getStatus()))
             return compra; // já recebida: não faz nada de novo
+        // não dá para receber hoje uma compra com data futura (proteção para dados antigos)
+        if (compra.getDataCompra() != null && compra.getDataCompra().isAfter(LocalDate.now()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Não é possível receber uma compra com data maior que a data atual");
         for (ItemCompra item : itemRepository.findByCompraId(id)) {
             movimentoService.aplicar(usuarioId, item.getProduto().getId(), Constantes.ENTRADA,
                     item.getQuantidade(), true, "Recebimento da compra #" + id, compra);
@@ -96,21 +104,22 @@ public class CompraService {
         compra.setStatus(Constantes.RECEBIDA);
         return repository.save(compra);
     }
-
+ 
     // sem período: devolve todas (inicio e fim são opcionais, mas devem vir juntos)
     public List<Compra> listar(LocalDate inicio, LocalDate fim) {
         if (inicio == null || fim == null)
             return repository.findAllByOrderByDataCompraDescIdDesc();
         return repository.findByDataCompraBetweenOrderByDataCompraDescIdDesc(inicio, fim);
     }
-
+ 
     public Compra buscar(Integer id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Compra não encontrada"));
     }
-
+ 
     public List<ItemCompra> itens(Integer id) {
         buscar(id);
         return itemRepository.findByCompraId(id);
     }
 }
+ 

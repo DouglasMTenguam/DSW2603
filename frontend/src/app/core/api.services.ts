@@ -43,6 +43,7 @@ export class FornecedorService {
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
   private http = inject(HttpClient);
+  me() { return this.http.get<Usuario>(`${API_URL}/usuarios/me`); }
   listar() { return this.http.get<Usuario[]>(`${API_URL}/usuarios`); }
   criar(f: UsuarioForm) { return this.http.post<Usuario>(`${API_URL}/usuarios`, f); }
   atualizar(id: number, f: UsuarioForm) { return this.http.put<Usuario>(`${API_URL}/usuarios/${id}`, f); }
